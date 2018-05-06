@@ -141,15 +141,18 @@ def evaluate(n_classes):
   labels1, labels2 = tf.split(labels, 2)
   model1 = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
   model2 = resnet_model.ResNet(hps, images2, labels2, FLAGS.mode)
-  with tf.variable_scope('m1'):
+  g1 = tf.Graph()
+  g2 = tf.Graph()
+  sess1 = tf.Session(graph=g1, config=tf.ConfigProto(allow_soft_placement=True))
+  sess2 = tf.Session(graph=g2, config=tf.ConfigProto(allow_soft_placement=True))
+  with g1.as_default() as g1:
     model1.build_graph()
-  with tf.variable_scope('m2'):
+  with g2.as_default() as g2:
     model2.build_graph()
   saver = tf.train.Saver()
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
-  sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
-  sess2 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+
   tf.train.start_queue_runners(sess1)
   tf.train.start_queue_runners(sess2)
 
