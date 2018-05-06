@@ -141,8 +141,10 @@ def evaluate(n_classes):
   labels1, labels2 = tf.split(labels, 2)
   model1 = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
   model2 = resnet_model.ResNet(hps, images2, labels2, FLAGS.mode)
-  model1.build_graph()
-  model2.build_graph()
+  with tf.variable_scope('m1'):
+    model1.build_graph()
+  with tf.variable_scope('m2'):
+    model2.build_graph()
   saver = tf.train.Saver()
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
