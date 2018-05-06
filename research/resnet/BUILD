@@ -34,6 +34,17 @@ py_binary(
     ],
 )
 
+py_binary(
+    name = "resnet_multiple",
+    srcs [
+        "resnet_eval_multiple.py",
+       ],
+    deps = [
+        ":cifar_input",
+        ":resnet_model",
+    ],
+)
+
 py_library(
     name = "cifar_input",
     srcs = ["cifar_input.py"],
