@@ -35,7 +35,7 @@ py_binary(
 )
 
 py_binary(
-    name = "resnet_multiple",
+    name = "resnet_eval_multiple",
     srcs = [
         "resnet_eval_multiple.py",
        ],
