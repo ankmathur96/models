@@ -159,14 +159,14 @@ def evaluate(hps):
 
     precision_summ = tf.Summary()
     precision_summ.value.add(
-        tag='Precision', simple_value=precision)
+        tag='Precision1', simple_value=precision)
     summary_writer.add_summary(precision_summ, train_step)
     best_precision_summ = tf.Summary()
     best_precision_summ.value.add(
-        tag='Best Precision', simple_value=best_precision)
+        tag='Best Precision1', simple_value=best_precision)
     summary_writer.add_summary(best_precision_summ, train_step)
     summary_writer.add_summary(summaries1, train_step)
-    tf.logging.info('loss: %.3f, precision: %.3f, best precision: %.3f' %
+    tf.logging.info('loss1: %.3f, precision: %.3f, best precision: %.3f' %
                     (loss, precision, best_precision))
     summary_writer.flush()
 
@@ -186,14 +186,14 @@ def evaluate(hps):
 
     precision_summ = tf.Summary()
     precision_summ.value.add(
-        tag='Precision', simple_value=precision)
+        tag='Precision2', simple_value=precision)
     summary_writer.add_summary(precision_summ, train_step)
     best_precision_summ = tf.Summary()
     best_precision_summ.value.add(
-        tag='Best Precision', simple_value=best_precision)
+        tag='Best Precision2', simple_value=best_precision)
     summary_writer.add_summary(best_precision_summ, train_step)
     summary_writer.add_summary(summaries, train_step)
-    tf.logging.info('loss: %.3f, precision: %.3f, best precision: %.3f' %
+    tf.logging.info('loss2: %.3f, precision: %.3f, best precision: %.3f' %
                     (loss, precision, best_precision))
     summary_writer.flush()
 
