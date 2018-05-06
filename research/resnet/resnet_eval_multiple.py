@@ -124,9 +124,11 @@ def train(n_classes):
 
 def evaluate(n_classes):
   """Eval loop."""
+  batch_size = 128
   images, labels = cifar_input.build_input(
-      FLAGS.dataset, FLAGS.eval_data_path, 128, FLAGS.mode)
-  hps = resnet_model.HParams(batch_size=128,
+      FLAGS.dataset, FLAGS.eval_data_path, batch_size, FLAGS.mode)
+  print(images)
+  hps = resnet_model.HParams(batch_size=batch_size/2,
                        num_classes=n_classes,
                        min_lrn_rate=0.0001,
                        lrn_rate=0.1,
@@ -137,9 +139,6 @@ def evaluate(n_classes):
                        optimizer='mom')
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
-  print(tf.shape(images1)[0].eval())
-  hps._replace(batch_size=tf.shape(images1)[0])
-  print('HYPERPARAMS:', hps)
   model = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
   model2 = resnet_model.ResNet(hps, images2, labels2, FLAGS.mode)
   model.build_graph()
