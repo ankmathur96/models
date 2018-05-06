@@ -180,12 +180,12 @@ def evaluate(n_classes):
     precision_summ = tf.Summary()
     precision_summ.value.add(
         tag='Precision1', simple_value=precision)
-    summary_writer.add_summary(precision_summ, train_step)
+    summary_writer.add_summary(precision_summ, train_step1)
     best_precision_summ = tf.Summary()
     best_precision_summ.value.add(
         tag='Best Precision1', simple_value=best_precision)
-    summary_writer.add_summary(best_precision_summ, train_step)
-    summary_writer.add_summary(summaries1, train_step)
+    summary_writer.add_summary(best_precision_summ, train_step1)
+    summary_writer.add_summary(summaries1, train_step1)
     tf.logging.info('loss1: %.3f, precision: %.3f, best precision: %.3f' %
                     (loss, precision, best_precision))
     summary_writer.flush()
