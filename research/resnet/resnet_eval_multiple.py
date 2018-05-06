@@ -139,9 +139,10 @@ def evaluate(n_classes):
                        optimizer='mom')
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
-  model = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
+  model1 = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
   model2 = resnet_model.ResNet(hps, images2, labels2, FLAGS.mode)
-  model.build_graph()
+  model1.build_graph()
+  model2.build_graph()
   saver = tf.train.Saver()
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
@@ -166,8 +167,8 @@ def evaluate(n_classes):
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
       (summaries1, loss, predictions, truth, train_step1) = sess1.run(
-          [model.summaries, model.cost, model.predictions,
-           model.labels, model.global_step])
+          [model1.summaries, model1.cost, model1.predictions,
+           model1.labels, model1.global_step])
 
       truth = np.argmax(truth, axis=1)
       predictions = np.argmax(predictions, axis=1)
@@ -191,8 +192,8 @@ def evaluate(n_classes):
 
     for _ in six.moves.range(FLAGS.eval_batch_count):
       (summaries, loss, predictions, truth, train_step) = sess2.run(
-          [model.summaries, model.cost, model.predictions,
-           model.labels, model.global_step])
+          [model2.summaries, model2.cost, model2.predictions,
+           model2.labels, model2.global_step])
 
       truth = np.argmax(truth, axis=1)
       predictions = np.argmax(predictions, axis=1)
