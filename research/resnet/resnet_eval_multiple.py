@@ -121,6 +121,7 @@ def evaluate(hps):
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
   hps._replace(batch_size=tf.shape(images1)[0])
+  print('HYPERPARAMS:', hps)
   model = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
   model2 = resnet_model.ResNet(hps, images2, labels2, FLAGS.mode)
   model.build_graph()
