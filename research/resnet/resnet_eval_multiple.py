@@ -47,8 +47,16 @@ tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
 
 
-def train(hps):
+def train(n_classes):
   """Training loop."""
+  hps = resnet_model.HParams(batch_size=128, num_classes=n_classes,
+                             min_lrn_rate=0.0001,
+                             lrn_rate=0.1,
+                             num_residual_units=5,
+                             use_bottleneck=False,
+                             weight_decay_rate=0.0002,
+                             relu_leakiness=0.1,
+                             optimizer='mom')
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.train_data_path, hps.batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
@@ -114,13 +122,22 @@ def train(hps):
       mon_sess.run(model.train_op)
 
 
-def evaluate(hps):
+def evaluate(n_classes):
   """Eval loop."""
   images, labels = cifar_input.build_input(
-      FLAGS.dataset, FLAGS.eval_data_path, hps.batch_size, FLAGS.mode)
+      FLAGS.dataset, FLAGS.eval_data_path, 128, FLAGS.mode)
+  hps = resnet_model.HParams(batch_size=128,
+                       num_classes=n_classes,
+                       min_lrn_rate=0.0001,
+                       lrn_rate=0.1,
+                       num_residual_units=5,
+                       use_bottleneck=False,
+                       weight_decay_rate=0.0002,
+                       relu_leakiness=0.1,
+                       optimizer='mom')
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
-  print(tf.shape(images1)[0])
+  print(tf.shape(images1)[0].eval())
   hps._replace(batch_size=tf.shape(images1)[0])
   print('HYPERPARAMS:', hps)
   model = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
@@ -214,31 +231,16 @@ def main(_):
   else:
     raise ValueError('Only support 0 or 1 gpu.')
 
-  if FLAGS.mode == 'train':
-    batch_size = 128
-  elif FLAGS.mode == 'eval':
-    batch_size = 100
-
   if FLAGS.dataset == 'cifar10':
     num_classes = 10
   elif FLAGS.dataset == 'cifar100':
     num_classes = 100
 
-  hps = resnet_model.HParams(batch_size=batch_size,
-                             num_classes=num_classes,
-                             min_lrn_rate=0.0001,
-                             lrn_rate=0.1,
-                             num_residual_units=5,
-                             use_bottleneck=False,
-                             weight_decay_rate=0.0002,
-                             relu_leakiness=0.1,
-                             optimizer='mom')
-
   with tf.device(dev):
     if FLAGS.mode == 'train':
-      train(hps)
+      train(num_classes)
     elif FLAGS.mode == 'eval':
-      evaluate(hps)
+      evaluate(num_classes)
 
 
 if __name__ == '__main__':
