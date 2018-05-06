@@ -45,6 +45,8 @@ tf.app.flags.DEFINE_string('log_root', '',
                            'parent directory of FLAGS.train_dir/eval_dir.')
 tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
+tf.app.flags.DEFINE_string('model_name', '',
+                           'Name for the model.')
 
 
 def train(hps):
@@ -119,7 +121,8 @@ def evaluate(hps):
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.eval_data_path, hps.batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
-  model.build_graph()
+  with tf.variable_scope(str(FLAGS.model_name)) as scope:
+    model.build_graph()
   saver = tf.train.Saver()
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
