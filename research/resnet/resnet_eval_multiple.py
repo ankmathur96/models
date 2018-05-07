@@ -148,7 +148,6 @@ def evaluate(n_classes):
   with tf.variable_scope(FLAGS.m1name) as scope:
     model1.build_graph()
   saver1 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m1name)))
-  summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
   tf.train.start_queue_runners(sess1)
 
@@ -186,9 +185,7 @@ def evaluate(n_classes):
     saver2.restore(sess2, ckpt_state2.model_checkpoint_path)
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
-      (summaries1, loss, predictions, truth, train_step1) = sess1.run(
-          [model1.summaries, model1.cost, model1.predictions,
-           model1.labels, model1.global_step])
+      loss, predictions, truth = sess1.run([model1.cost, model1.predictions, model1.labels])
 
       truth = np.argmax(truth, axis=1)
       predictions = np.argmax(predictions, axis=1)
@@ -197,23 +194,11 @@ def evaluate(n_classes):
     precision = 1.0 * correct_prediction / total_prediction
     best_precision = max(precision, best_precision)
 
-    precision_summ = tf.Summary()
-    precision_summ.value.add(
-        tag='Precision1', simple_value=precision)
-    summary_writer.add_summary(precision_summ, train_step1)
-    best_precision_summ = tf.Summary()
-    best_precision_summ.value.add(
-        tag='Best Precision1', simple_value=best_precision)
-    summary_writer.add_summary(best_precision_summ, train_step1)
-    summary_writer.add_summary(summaries1, train_step1)
     tf.logging.info('loss1: %.3f, precision: %.3f, best precision: %.3f' %
                     (loss, precision, best_precision))
-    summary_writer.flush()
 
     for _ in six.moves.range(FLAGS.eval_batch_count):
-      (summaries, loss, predictions, truth, train_step) = sess2.run(
-          [model2.summaries, model2.cost, model2.predictions,
-           model2.labels, model2.global_step])
+      loss, predictions, truth = sess2.run([model2.cost, model2.predictions, model2.truth])
 
       truth = np.argmax(truth, axis=1)
       predictions = np.argmax(predictions, axis=1)
@@ -224,18 +209,9 @@ def evaluate(n_classes):
     precision = 1.0 * correct_prediction / total_prediction
     best_precision = max(precision, best_precision)
 
-    precision_summ = tf.Summary()
-    precision_summ.value.add(
-        tag='Precision2', simple_value=precision)
-    summary_writer.add_summary(precision_summ, train_step)
-    best_precision_summ = tf.Summary()
-    best_precision_summ.value.add(
-        tag='Best Precision2', simple_value=best_precision)
-    summary_writer.add_summary(best_precision_summ, train_step)
-    summary_writer.add_summary(summaries, train_step)
+
     tf.logging.info('loss2: %.3f, precision: %.3f, best precision: %.3f' %
                     (loss, precision, best_precision))
-    summary_writer.flush()
 
     if FLAGS.eval_once:
       break
