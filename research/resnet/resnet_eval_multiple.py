@@ -15,6 +15,7 @@
 
 """ResNet Train/Eval module.
 """
+from __future__ import print_function, division
 import time
 import six
 import sys
@@ -153,37 +154,23 @@ def evaluate(n_classes):
   saver1 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m1name)))
   sess1.run(tf.initialize_all_variables())
   tf.train.start_queue_runners(sess1)
-
-  for i in range(FLAGS.n_trials):
-    try:
+  try:
       ckpt_state = tf.train.get_checkpoint_state(FLAGS.log_root1)
-    except tf.errors.OutOfRangeError as e:
+  except tf.errors.OutOfRangeError as e:
       tf.logging.error('Cannot restore checkpoint: %s', e)
-      continue
-    if not (ckpt_state and ckpt_state.model_checkpoint_path):
-      tf.logging.info('No model to eval yet at %s', FLAGS.log_root1)
-      continue
-    tf.logging.info('Loading checkpoint %s', ckpt_state.model_checkpoint_path)
-    var_list = checkpoint_utils.list_variables(FLAGS.log_root1)
-    print('ROOT1:', var_list)
-    try:
+  tf.logging.info('Loading checkpoint %s', ckpt_state.model_checkpoint_path)
+  try:
       ckpt_state2 = tf.train.get_checkpoint_state(FLAGS.log_root2)
-    except tf.errors.OutOfRangeError as e:
+  except tf.errors.OutOfRangeError as e:
       tf.logging.error('Cannot restore checkpoint: %s', e)
-      continue
-    if not (ckpt_state2 and ckpt_state.model_checkpoint_path):
-      tf.logging.info('No model to eval yet at %s', FLAGS.log_root2)
-      continue
-    tf.logging.info('Loading checkpoint %s', ckpt_state2.model_checkpoint_path)
-    var_list = checkpoint_utils.list_variables(FLAGS.log_root2)
-    print('ROOT2:', var_list)
-    saver1.restore(sess1, ckpt_state.model_checkpoint_path)
-    print('Restored Model 1')
-    sess2 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
-    tf.train.start_queue_runners(sess2)
-    saver2 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m2name)))
-    sess2.run(tf.initialize_all_variables())
-    saver2.restore(sess2, ckpt_state2.model_checkpoint_path)
+  tf.logging.info('Loading checkpoint %s', ckpt_state2.model_checkpoint_path)
+  saver1.restore(sess1, ckpt_state.model_checkpoint_path)
+  sess2 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+  tf.train.start_queue_runners(sess2)
+  saver2 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m2name)))
+  sess2.run(tf.initialize_all_variables())
+  saver2.restore(sess2, ckpt_state2.model_checkpoint_path)
+  for i in range(FLAGS.n_trials):
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
       start = time.time()
