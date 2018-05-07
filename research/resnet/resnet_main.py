@@ -54,7 +54,8 @@ def train(hps):
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.train_data_path, hps.batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
-  model.build_graph()
+  with tf.variable_scope(str(FLAGS.model_name)) as scope:
+    model.build_graph()
 
   param_stats = tf.contrib.tfprof.model_analyzer.print_model_analysis(
       tf.get_default_graph(),
