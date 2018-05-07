@@ -18,6 +18,7 @@
 import time
 import six
 import sys
+import json
 
 import cifar_input
 import numpy as np
@@ -48,6 +49,7 @@ tf.app.flags.DEFINE_string('m1name', 'm1', 'Model1 Name')
 tf.app.flags.DEFINE_string('m2name', 'm2', 'Model2 Name')
 tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
+tf.app.flags.DEFINE_integer('n_trials', 200, 'Number of trials for performance testing.')
 
 
 def train(n_classes):
@@ -124,13 +126,12 @@ def train(n_classes):
     while not mon_sess.should_stop():
       mon_sess.run(model.train_op)
 
-
 def evaluate(n_classes):
   """Eval loop."""
   batch_size = 128
+  timed_results = {'m1_latency' : [], 'm2_latency' : [], 'batch_size' : batch_size}
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.eval_data_path, batch_size, FLAGS.mode)
-  print(images)
   hps = resnet_model.HParams(batch_size=batch_size/2,
                        num_classes=n_classes,
                        min_lrn_rate=0.0001,
@@ -153,8 +154,7 @@ def evaluate(n_classes):
   sess1.run(tf.initialize_all_variables())
   tf.train.start_queue_runners(sess1)
 
-  best_precision = 0.0
-  while True:
+  for i in range(FLAGS.n_trials):
     try:
       ckpt_state = tf.train.get_checkpoint_state(FLAGS.log_root1)
     except tf.errors.OutOfRangeError as e:
@@ -186,38 +186,17 @@ def evaluate(n_classes):
     saver2.restore(sess2, ckpt_state2.model_checkpoint_path)
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
-      loss, predictions, truth = sess1.run([model1.cost, model1.predictions, model1.labels])
+      start = time.time()
+      predictions = sess1.run([model1.cost, model1.predictions, model1.labels])
+      timed_results['m1_latency'].append(time.time() - start)
 
-      truth = np.argmax(truth, axis=1)
-      predictions = np.argmax(predictions, axis=1)
-      correct_prediction += np.sum(truth == predictions)
-      total_prediction += predictions.shape[0]
-    precision = 1.0 * correct_prediction / total_prediction
-    best_precision = max(precision, best_precision)
-
-    tf.logging.info('loss1: %.3f, precision: %.3f, best precision: %.3f' %
-                    (loss, precision, best_precision))
     for _ in six.moves.range(FLAGS.eval_batch_count):
-      loss, predictions, truth = sess2.run([model2.cost, model2.predictions, model2.labels])
-
-      truth = np.argmax(truth, axis=1)
-      predictions = np.argmax(predictions, axis=1)
-      correct_prediction += np.sum(truth == predictions)
-      total_prediction += predictions.shape[0]
-
-
-    precision = 1.0 * correct_prediction / total_prediction
-    best_precision = max(precision, best_precision)
-
-
-    tf.logging.info('loss2: %.3f, precision: %.3f, best precision: %.3f' %
-                    (loss, precision, best_precision))
-
-    if FLAGS.eval_once:
-      break
-
-    time.sleep(60)
-
+      start = time.time()
+      predictions = sess2.run([model2.cost, model2.predictions, model2.labels])
+      timed_results['m2_latency'].append(time.time() - start)
+    print(str(i), str(timed_results['m1_latency'][-1]), str(timed_results['m2_latency'][-1]))
+  with open('combined_latency.json', 'w') as out_f:
+    json.dump(timed_results, out_f)
 
 def main(_):
   if FLAGS.num_gpus == 0:
