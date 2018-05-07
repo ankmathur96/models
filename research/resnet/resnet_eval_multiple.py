@@ -60,7 +60,6 @@ def evaluate(n_classes):
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
   images1 = sess1.run([images1])
-  print(images1)
   model1 = resnet_model.ResNet(hps, images1, labels1, 'eval')
   model2 = resnet_model.ResNet(hps, images2, labels2, 'eval')
   with tf.variable_scope(FLAGS.m1name) as scope:
