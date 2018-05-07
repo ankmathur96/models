@@ -147,10 +147,10 @@ def evaluate(n_classes):
   g1 = tf.Graph()
   g2 = tf.Graph()
   sess1 = tf.Session(graph=g1, config=tf.ConfigProto(allow_soft_placement=True))
-  with g1.as_default():
-      with tf.variable_scope(FLAGS.m1name) as scope:
-        model1.build_graph()
-  saver = tf.train.Saver()
+  with tf.variable_scope(FLAGS.m1name) as scope:
+    model1.build_graph()
+  saver1 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m1name)))
+  saver2 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m2name)))
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
   tf.train.start_queue_runners(sess1)
@@ -179,14 +179,14 @@ def evaluate(n_classes):
     tf.logging.info('Loading checkpoint %s', ckpt_state2.model_checkpoint_path)
     var_list = checkpoint_utils.list_variables(FLAGS.log_root2)
     print('ROOT2:', var_list)
-    saver.restore(sess1, ckpt_state.model_checkpoint_path)
+    saver1.restore(sess1, ckpt_state.model_checkpoint_path)
     print('Restored Model 1')
     sess2 = tf.Session(graph=g2, config=tf.ConfigProto(allow_soft_placement=True))
     tf.train.start_queue_runners(sess2)
     with g2.as_default():
         with tf.variable_scope(FLAGS.m2name) as scope:
             model2.build_graph()
-    saver.restore(sess2, ckpt_state2.model_checkpoint_path)
+    saver2.restore(sess2, ckpt_state2.model_checkpoint_path)
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
       (summaries1, loss, predictions, truth, train_step1) = sess1.run(
