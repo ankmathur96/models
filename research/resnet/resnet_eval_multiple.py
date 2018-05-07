@@ -144,9 +144,7 @@ def evaluate(n_classes):
   labels1, labels2 = tf.split(labels, 2)
   model1 = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
   model2 = resnet_model.ResNet(hps, images2, labels2, FLAGS.mode)
-  g1 = tf.Graph()
-  g2 = tf.Graph()
-  sess1 = tf.Session(graph=g1, config=tf.ConfigProto(allow_soft_placement=True))
+  sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
   with tf.variable_scope(FLAGS.m1name) as scope:
     model1.build_graph()
   saver1 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m1name)))
@@ -180,11 +178,10 @@ def evaluate(n_classes):
     print('ROOT2:', var_list)
     saver1.restore(sess1, ckpt_state.model_checkpoint_path)
     print('Restored Model 1')
-    sess2 = tf.Session(graph=g2, config=tf.ConfigProto(allow_soft_placement=True))
+    sess2 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
     tf.train.start_queue_runners(sess2)
-    with g2.as_default():
-        with tf.variable_scope(FLAGS.m2name) as scope:
-            model2.build_graph()
+    with tf.variable_scope(FLAGS.m2name) as scope:
+        model2.build_graph()
     saver2 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m2name)))
     saver2.restore(sess2, ckpt_state2.model_checkpoint_path)
     total_prediction, correct_prediction = 0, 0
