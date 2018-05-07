@@ -40,9 +40,12 @@ tf.app.flags.DEFINE_integer('eval_batch_count', 50,
                             'Number of batches to eval.')
 tf.app.flags.DEFINE_bool('eval_once', False,
                          'Whether evaluate the model only once.')
-tf.app.flags.DEFINE_string('log_root', '',
+tf.app.flags.DEFINE_string('log_root1', '',
                            'Directory to keep the checkpoints. Should be a '
                            'parent directory of FLAGS.train_dir/eval_dir.')
+tf.app.flags.DEFINE_string('log_root2', '', 'Directory for checkpoints of m2.')
+tf.app.flags.DEFINE_string('m1name', 'm1', 'Model1 Name')
+tf.app.flags.DEFINE_string('m2name', 'm2', 'Model2 Name')
 tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
 
@@ -141,13 +144,11 @@ def evaluate(n_classes):
   labels1, labels2 = tf.split(labels, 2)
   model1 = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
   model2 = resnet_model.ResNet(hps, images2, labels2, FLAGS.mode)
-  g1 = tf.Graph()
-  g2 = tf.Graph()
-  sess1 = tf.Session(graph=g1, config=tf.ConfigProto(allow_soft_placement=True))
-  sess2 = tf.Session(graph=g2, config=tf.ConfigProto(allow_soft_placement=True))
-  with g1.as_default() as g1:
+  sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+  sess2 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+  with tf.variable_scope(FLAGS.m1name) as scope:
     model1.build_graph()
-  with g2.as_default() as g2:
+  with tf.variable_scope(FLAGS.m2name) as scope:
     model2.build_graph()
   saver = tf.train.Saver()
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
@@ -159,16 +160,25 @@ def evaluate(n_classes):
   best_precision = 0.0
   while True:
     try:
-      ckpt_state = tf.train.get_checkpoint_state(FLAGS.log_root)
+      ckpt_state = tf.train.get_checkpoint_state(FLAGS.log_root1)
     except tf.errors.OutOfRangeError as e:
       tf.logging.error('Cannot restore checkpoint: %s', e)
       continue
     if not (ckpt_state and ckpt_state.model_checkpoint_path):
-      tf.logging.info('No model to eval yet at %s', FLAGS.log_root)
+      tf.logging.info('No model to eval yet at %s', FLAGS.log_root1)
+      continue
+    tf.logging.info('Loading checkpoint %s', ckpt_state.model_checkpoint_path)
+    try:
+      ckpt_state2 = tf.train.get_checkpoint_state(FLAGS.log_root2)
+    except tf.errors.OutOfRangeError as e:
+      tf.logging.error('Cannot restore checkpoint: %s', e)
+      continue
+    if not (ckpt_state and ckpt_state.model_checkpoint_path):
+      tf.logging.info('No model to eval yet at %s', FLAGS.log_root2)
       continue
     tf.logging.info('Loading checkpoint %s', ckpt_state.model_checkpoint_path)
     saver.restore(sess1, ckpt_state.model_checkpoint_path)
-    saver.restore(sess2, ckpt_state.model_checkpoint_path)
+    saver.restore(sess2, ckpt_state2.model_checkpoint_path)
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
       (summaries1, loss, predictions, truth, train_step1) = sess1.run(
