@@ -43,7 +43,7 @@ tf.app.flags.DEFINE_integer('n_trials', 200, 'Number of trials for performance t
 def evaluate(n_classes):
   """Eval loop."""
   batch_size = 128
-  timed_results = {'m1_latency' : [], 'm2_latency' : [], 'batch_size' : batch_size}
+  timed_results = {'preprocess_latency' : [], 'm1_latency' : [], 'm2_latency' : [], 'batch_size' : batch_size}
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.eval_data_path, batch_size, 'eval')
   hps = resnet_model.HParams(batch_size=batch_size // 2,
@@ -59,10 +59,12 @@ def evaluate(n_classes):
   tf.train.start_queue_runners(sess1)
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
-  images1, labels1 = sess1.run([images1, labels1])
-  images2, labels2 = sess1.run([images2, labels2])
-  images1, labels1 = tf.convert_to_tensor(images1), tf.convert_to_tensor(labels1)
-  images2, labels2 = tf.convert_to_tensor(images2), tf.convert_to_tensor(labels2)
+  for _ in range(FLAGS.n_trials):
+      start = time.time()
+      images1, labels1, images2, labels2 = sess1.run([images1, labels1, images2, labels2])
+      images1, labels1 = tf.convert_to_tensor(images1), tf.convert_to_tensor(labels1)
+      images2, labels2 = tf.convert_to_tensor(images2), tf.convert_to_tensor(labels2)
+      timed_results['preprocess_latency'].append(time.time() - start)
   model1 = resnet_model.ResNet(hps, images1, labels1, 'eval')
   model2 = resnet_model.ResNet(hps, images2, labels2, 'eval')
   with tf.variable_scope(FLAGS.m1name) as scope:
