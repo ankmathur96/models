@@ -198,7 +198,7 @@ def evaluate(n_classes):
                     (loss, precision, best_precision))
 
     for _ in six.moves.range(FLAGS.eval_batch_count):
-      loss, predictions, truth = sess2.run([model2.cost, model2.predictions, model2.truth])
+      loss, predictions, truth = sess2.run([model2.cost, model2.predictions, model2.labels])
 
       truth = np.argmax(truth, axis=1)
       predictions = np.argmax(predictions, axis=1)
