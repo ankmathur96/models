@@ -57,8 +57,8 @@ def evaluate(n_classes):
                        optimizer='mom')
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
-  model1 = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
-  model2 = resnet_model.ResNet(hps, images2, labels2, FLAGS.mode)
+  model1 = resnet_model.ResNet(hps, images1, labels1, 'eval')
+  model2 = resnet_model.ResNet(hps, images2, labels2, 'eval')
   sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
   with tf.variable_scope(FLAGS.m1name) as scope:
     model1.build_graph()
