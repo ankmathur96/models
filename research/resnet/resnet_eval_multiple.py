@@ -150,7 +150,6 @@ def evaluate(n_classes):
   with tf.variable_scope(FLAGS.m1name) as scope:
     model1.build_graph()
   saver1 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m1name)))
-  saver2 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m2name)))
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
   tf.train.start_queue_runners(sess1)
@@ -186,6 +185,7 @@ def evaluate(n_classes):
     with g2.as_default():
         with tf.variable_scope(FLAGS.m2name) as scope:
             model2.build_graph()
+    saver2 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m2name)))
     saver2.restore(sess2, ckpt_state2.model_checkpoint_path)
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
