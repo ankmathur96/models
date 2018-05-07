@@ -56,6 +56,7 @@ def evaluate(n_classes):
                        relu_leakiness=0.1,
                        optimizer='mom')
   sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+  tf.train.start_queue_runners(sess1)
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
   images1 = images1.eval()
@@ -69,7 +70,6 @@ def evaluate(n_classes):
   saver1 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m1name)))
   saver2 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m2name)))
   sess1.run(tf.initialize_all_variables())
-  tf.train.start_queue_runners(sess1)
   try:
       ckpt_state = tf.train.get_checkpoint_state(FLAGS.log_root1)
   except tf.errors.OutOfRangeError as e:
