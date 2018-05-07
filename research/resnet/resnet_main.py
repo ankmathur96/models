@@ -15,9 +15,11 @@
 
 """ResNet Train/Eval module.
 """
+from __future__ import print_function
 import time
 import six
 import sys
+import json
 
 import cifar_input
 import numpy as np
@@ -47,6 +49,7 @@ tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
 tf.app.flags.DEFINE_string('model_name', '',
                            'Name for the model.')
+tf.app.flags.DEFINE_integer('n_trials', 200, 'Number of trials for performance testing.')
 
 
 def train(hps):
@@ -132,28 +135,27 @@ def evaluate(hps):
   tf.train.start_queue_runners(sess)
 
   best_precision = 0.0
-  while True:
-    try:
+  try:
       ckpt_state = tf.train.get_checkpoint_state(FLAGS.log_root)
-    except tf.errors.OutOfRangeError as e:
+  except tf.errors.OutOfRangeError as e:
       tf.logging.error('Cannot restore checkpoint: %s', e)
-      continue
-    if not (ckpt_state and ckpt_state.model_checkpoint_path):
-      tf.logging.info('No model to eval yet at %s', FLAGS.log_root)
-      continue
-    tf.logging.info('Loading checkpoint %s', ckpt_state.model_checkpoint_path)
-    saver.restore(sess, ckpt_state.model_checkpoint_path)
-
+  tf.logging.info('Loading checkpoint %s', ckpt_state.model_checkpoint_path)
+  saver.restore(sess, ckpt_state.model_checkpoint_path)
+  timed_results = {'total_latency' : []}
+  for i in range(FLAGS.n_trials):
     total_prediction, correct_prediction = 0, 0
-    for _ in six.moves.range(FLAGS.eval_batch_count):
-      (summaries, loss, predictions, truth, train_step) = sess.run(
+    start = time.time()
+    predictions = sess.run([model.predictions])
+    timed_results['total_latency'].append(time.time() - start)
+    print(i, timed_results['total_latency'][-1])
+    (summaries, loss, predictions, truth, train_step) = sess.run(
           [model.summaries, model.cost, model.predictions,
            model.labels, model.global_step])
 
-      truth = np.argmax(truth, axis=1)
-      predictions = np.argmax(predictions, axis=1)
-      correct_prediction += np.sum(truth == predictions)
-      total_prediction += predictions.shape[0]
+    truth = np.argmax(truth, axis=1)
+    predictions = np.argmax(predictions, axis=1)
+    correct_prediction += np.sum(truth == predictions)
+    total_prediction += predictions.shape[0]
 
     precision = 1.0 * correct_prediction / total_prediction
     best_precision = max(precision, best_precision)
@@ -174,7 +176,8 @@ def evaluate(hps):
     if FLAGS.eval_once:
       break
 
-    time.sleep(60)
+    with open('naive_latency.json', 'w') as out_f:
+        json.dump(timed_results, out_f)
 
 
 def main(_):
@@ -188,7 +191,7 @@ def main(_):
   if FLAGS.mode == 'train':
     batch_size = 128
   elif FLAGS.mode == 'eval':
-    batch_size = 100
+    batch_size = 64
 
   if FLAGS.dataset == 'cifar10':
     num_classes = 10
