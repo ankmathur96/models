@@ -57,6 +57,8 @@ def evaluate(n_classes):
                        optimizer='mom')
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
+  images1 = images1.eval()
+  print(images1)
   model1 = resnet_model.ResNet(hps, images1, labels1, 'eval')
   model2 = resnet_model.ResNet(hps, images2, labels2, 'eval')
   sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
@@ -65,6 +67,7 @@ def evaluate(n_classes):
   with tf.variable_scope(FLAGS.m2name) as scope:
     model2.build_graph()
   saver1 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m1name)))
+  saver2 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m2name)))
   sess1.run(tf.initialize_all_variables())
   tf.train.start_queue_runners(sess1)
   try:
@@ -78,10 +81,6 @@ def evaluate(n_classes):
       tf.logging.error('Cannot restore checkpoint: %s', e)
   tf.logging.info('Loading checkpoint %s', ckpt_state2.model_checkpoint_path)
   saver1.restore(sess1, ckpt_state.model_checkpoint_path)
-  # sess2 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
-  # tf.train.start_queue_runners(sess2)
-  saver2 = tf.train.Saver(tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=str(FLAGS.m2name)))
-  # sess2.run(tf.initialize_all_variables())
   saver2.restore(sess1, ckpt_state2.model_checkpoint_path)
   for i in range(FLAGS.n_trials):
     start = time.time()
