@@ -51,6 +51,7 @@ tf.app.flags.DEFINE_string('model_name', '',
 
 def train(hps):
   """Training loop."""
+  print('******FLAGS******', str(FLAGS.model_name))
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.train_data_path, hps.batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)

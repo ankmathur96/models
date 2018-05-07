@@ -23,7 +23,7 @@ import cifar_input
 import numpy as np
 import resnet_model
 import tensorflow as tf
-
+from tensorflow.contrib.framework.python.framework import checkpoint_utils
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_string('dataset', 'cifar10', 'cifar10 or cifar100.')
 tf.app.flags.DEFINE_string('mode', 'train', 'train or eval.')
@@ -168,17 +168,22 @@ def evaluate(n_classes):
       tf.logging.info('No model to eval yet at %s', FLAGS.log_root1)
       continue
     tf.logging.info('Loading checkpoint %s', ckpt_state.model_checkpoint_path)
+    var_list = checkpoint_utils.list_variables(FLAGS.log_root1)
+    print('ROOT1:', var_list)
     try:
       ckpt_state2 = tf.train.get_checkpoint_state(FLAGS.log_root2)
     except tf.errors.OutOfRangeError as e:
       tf.logging.error('Cannot restore checkpoint: %s', e)
       continue
-    if not (ckpt_state and ckpt_state.model_checkpoint_path):
+    if not (ckpt_state2 and ckpt_state.model_checkpoint_path):
       tf.logging.info('No model to eval yet at %s', FLAGS.log_root2)
       continue
-    tf.logging.info('Loading checkpoint %s', ckpt_state.model_checkpoint_path)
+    tf.logging.info('Loading checkpoint %s', ckpt_state2.model_checkpoint_path)
+    var_list = checkpoint_utils.list_variables(FLAGS.log_root2)
+    print('ROOT2:', var_list)
     saver.restore(sess1, ckpt_state.model_checkpoint_path)
-    saver.restore(sess2, ckpt_state2.model_checkpoint_path)
+    print('Restored Model 1')
+    # saver.restore(sess2, ckpt_state2.model_checkpoint_path)
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
       (summaries1, loss, predictions, truth, train_step1) = sess1.run(
