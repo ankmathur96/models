@@ -133,7 +133,7 @@ def evaluate(n_classes):
   timed_results = {'m1_latency' : [], 'm2_latency' : [], 'batch_size' : batch_size}
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.eval_data_path, batch_size, FLAGS.mode)
-  hps = resnet_model.HParams(batch_size=batch_size/2,
+  hps = resnet_model.HParams(batch_size=batch_size // 2,
                        num_classes=n_classes,
                        min_lrn_rate=0.0001,
                        lrn_rate=0.1,
@@ -171,7 +171,6 @@ def evaluate(n_classes):
   sess2.run(tf.initialize_all_variables())
   saver2.restore(sess2, ckpt_state2.model_checkpoint_path)
   for i in range(FLAGS.n_trials):
-    total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
       start = time.time()
       predictions = sess1.run([model1.cost, model1.predictions, model1.labels])
