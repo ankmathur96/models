@@ -145,17 +145,13 @@ def evaluate(n_classes):
   model1 = resnet_model.ResNet(hps, images1, labels1, FLAGS.mode)
   model2 = resnet_model.ResNet(hps, images2, labels2, FLAGS.mode)
   sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
-  sess2 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
   with tf.variable_scope(FLAGS.m1name) as scope:
     model1.build_graph()
-  with tf.variable_scope(FLAGS.m2name) as scope:
-    model2.build_graph()
   saver = tf.train.Saver()
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
 
   tf.train.start_queue_runners(sess1)
-  tf.train.start_queue_runners(sess2)
 
   best_precision = 0.0
   while True:
@@ -183,7 +179,11 @@ def evaluate(n_classes):
     print('ROOT2:', var_list)
     saver.restore(sess1, ckpt_state.model_checkpoint_path)
     print('Restored Model 1')
-    # saver.restore(sess2, ckpt_state2.model_checkpoint_path)
+    sess2 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
+    tf.train.start_queue_runners(sess2)
+    with tf.variable_scope(FLAGS.m2name) as scope:
+        model2.build_graph()
+    saver.restore(sess2, ckpt_state2.model_checkpoint_path)
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
       (summaries1, loss, predictions, truth, train_step1) = sess1.run(
