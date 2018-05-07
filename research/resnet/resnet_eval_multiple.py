@@ -58,7 +58,7 @@ def evaluate(n_classes):
   sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
-  images1 = images1.eval()
+  images1 = sess1.run([images1])
   print(images1)
   model1 = resnet_model.ResNet(hps, images1, labels1, 'eval')
   model2 = resnet_model.ResNet(hps, images2, labels2, 'eval')
