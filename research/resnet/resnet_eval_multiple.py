@@ -45,7 +45,7 @@ def evaluate(n_classes):
   batch_size = 128
   timed_results = {'m1_latency' : [], 'm2_latency' : [], 'batch_size' : batch_size}
   images, labels = cifar_input.build_input(
-      FLAGS.dataset, FLAGS.eval_data_path, batch_size, FLAGS.mode)
+      FLAGS.dataset, FLAGS.eval_data_path, batch_size, 'eval')
   hps = resnet_model.HParams(batch_size=batch_size // 2,
                        num_classes=n_classes,
                        min_lrn_rate=0.0001,
