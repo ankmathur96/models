@@ -59,7 +59,10 @@ def evaluate(n_classes):
   tf.train.start_queue_runners(sess1)
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
-  images1 = sess1.run([images1])
+  images1, labels1 = sess1.run([images1, labels1])
+  images2, labels2 = sess1.run([images2, labels2])
+  images1, labels1 = tf.convert_to_tensor(images1), tf.convert_to_tensor(labels1)
+  images2, labels2 = tf.convert_to_tensor(images2), tf.convert_to_tensor(labels2)
   model1 = resnet_model.ResNet(hps, images1, labels1, 'eval')
   model2 = resnet_model.ResNet(hps, images2, labels2, 'eval')
   with tf.variable_scope(FLAGS.m1name) as scope:
