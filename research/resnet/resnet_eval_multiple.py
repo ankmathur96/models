@@ -55,13 +55,13 @@ def evaluate(n_classes):
                        weight_decay_rate=0.0002,
                        relu_leakiness=0.1,
                        optimizer='mom')
+  sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
   images1, images2 = tf.split(images, 2)
   labels1, labels2 = tf.split(labels, 2)
   images1 = images1.eval()
   print(images1)
   model1 = resnet_model.ResNet(hps, images1, labels1, 'eval')
   model2 = resnet_model.ResNet(hps, images2, labels2, 'eval')
-  sess1 = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
   with tf.variable_scope(FLAGS.m1name) as scope:
     model1.build_graph()
   with tf.variable_scope(FLAGS.m2name) as scope:
