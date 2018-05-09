@@ -39,14 +39,14 @@ tf.app.flags.DEFINE_string('m2name', 'm2', 'Model2 Name')
 tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
 tf.app.flags.DEFINE_integer('n_trials', 200, 'Number of trials for performance testing.')
+tf.app.flags.DEFINE_integer('batch_size', 128, 'Batch size to evaluate on')
 
 def evaluate(n_classes):
   """Eval loop."""
-  batch_size = 128
-  timed_results = {'preprocess_latency' : [], 'm1_latency' : [], 'm2_latency' : [], 'batch_size' : batch_size}
+  timed_results = {'preprocess_latency' : [], 'm1_latency' : [], 'm2_latency' : [], 'batch_size' : FLAGS.batch_size}
   images, labels = cifar_input.build_input(
-      FLAGS.dataset, FLAGS.eval_data_path, batch_size, 'eval')
-  hps = resnet_model.HParams(batch_size=batch_size // 2,
+      FLAGS.dataset, FLAGS.eval_data_path, FLAGS.batch_size, 'eval')
+  hps = resnet_model.HParams(batch_size=FLAGS.batch_size // 2,
                        num_classes=n_classes,
                        min_lrn_rate=0.0001,
                        lrn_rate=0.1,
@@ -94,7 +94,7 @@ def evaluate(n_classes):
     predictions = sess1.run([model2.cost, model2.predictions, model2.labels])
     timed_results['m2_latency'].append(time.time() - start)
     print(str(i), str(timed_results['m1_latency'][-1]), str(timed_results['m2_latency'][-1]))
-  with open('combined_latency.json', 'w') as out_f:
+  with open('combined_latency_' + str(FLAGS.batch_size) + '.json', 'w') as out_f:
     json.dump(timed_results, out_f)
 
 def main(_):

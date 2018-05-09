@@ -50,7 +50,7 @@ tf.app.flags.DEFINE_integer('num_gpus', 0,
 tf.app.flags.DEFINE_string('model_name', '',
                            'Name for the model.')
 tf.app.flags.DEFINE_integer('n_trials', 200, 'Number of trials for performance testing.')
-
+tf.app.flags.DEFINE_integer('batch_size', 64, 'Batch size')
 
 def train(hps):
   """Training loop."""
@@ -176,7 +176,7 @@ def evaluate(hps):
     if FLAGS.eval_once:
       break
 
-    with open('naive_latency.json', 'w') as out_f:
+    with open('naive_latency_' + str(FLAGS.batch_size) + '.json', 'w') as out_f:
         json.dump(timed_results, out_f)
 
 
@@ -188,17 +188,12 @@ def main(_):
   else:
     raise ValueError('Only support 0 or 1 gpu.')
 
-  if FLAGS.mode == 'train':
-    batch_size = 128
-  elif FLAGS.mode == 'eval':
-    batch_size = 64
-
   if FLAGS.dataset == 'cifar10':
     num_classes = 10
   elif FLAGS.dataset == 'cifar100':
     num_classes = 100
 
-  hps = resnet_model.HParams(batch_size=batch_size,
+  hps = resnet_model.HParams(batch_size=FLAGS.batch_size,
                              num_classes=num_classes,
                              min_lrn_rate=0.0001,
                              lrn_rate=0.1,
